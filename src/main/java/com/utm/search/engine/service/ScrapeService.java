@@ -27,7 +27,6 @@ public class ScrapeService {
     @Value("${search.engine.url}")
     private String url;
     private final List<String> visitedPages = new ArrayList<>();
-    private final List<String> returnedPages = new ArrayList<>();
     private final List<SearchResponse> searchResponses = new ArrayList<>();
 
     public List<SearchResponse> search(List<String> words) {
@@ -51,9 +50,25 @@ public class ScrapeService {
             return;
         }
 
+        Elements descriptionSelector = htmlDocument.select("meta[name=description]");
+        String description = descriptionSelector.size() != 0
+                ? descriptionSelector.get(0).attr("content")
+                : htmlDocument.title();
+
+        System.out.println("Link: " + url);
+        System.out.println(htmlDocument.title());
+        System.out.println("Meta description 1 : " + description);
+        boolean alreadyMatched = false;
+
         for (Element link : htmlDocument.getAllElements()) {
-            if (!returnedPages.contains(url) && areWordsMatching(link.text(), words)) {
-                returnedPages.add(url);
+            if (!alreadyMatched && areWordsMatching(link.text(), words)) {
+                SearchResponse searchResponse = SearchResponse.builder()
+                    .title(htmlDocument.title())
+                    .url(url)
+                    .description(description)
+                    .build();
+                searchResponses.add(searchResponse);
+                alreadyMatched = true;
             }
             if (link.is("a[href]")) {
                 String nextLink = link.absUrl("href");
@@ -86,22 +101,6 @@ public class ScrapeService {
             if (connection.response().statusCode() != 200) {
                 return null;
             }
-
-            Elements descriptionSelector = document.select("meta[name=description]");
-            String description = descriptionSelector.size() != 0
-                    ? descriptionSelector.get(0).attr("content")
-                    : document.title();
-
-            System.out.println("Link: " + url);
-            System.out.println(document.title());
-            System.out.println("Meta description 1 : " + description);
-
-            SearchResponse searchResponse = SearchResponse.builder()
-                .title(document.title())
-                .url(url)
-                .description(description)
-                .build();
-            searchResponses.add(searchResponse);
 
             visitedPages.add(url);
             return document;
