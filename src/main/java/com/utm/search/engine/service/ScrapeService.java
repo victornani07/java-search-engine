@@ -24,7 +24,7 @@ public class ScrapeService {
     @Value("${search.engine.max-number-of-pages}")
     private int maxNumberOfPages = 20;
 
-    @Value("${search.engine.url}")
+    @Value("${search.engine.url-wikipedia}")
     private String url;
     private final List<String> visitedPages = new ArrayList<>();
     private final List<SearchResponse> searchResponses = new ArrayList<>();
@@ -50,14 +50,18 @@ public class ScrapeService {
             return;
         }
 
+        if (checkIfDocumentIsLoginPage(htmlDocument)) {
+            return;
+        }
+
         Elements descriptionSelector = htmlDocument.select("meta[name=description]");
         String description = descriptionSelector.size() != 0
-                ? descriptionSelector.get(0).attr("content")
-                : htmlDocument.title();
+            ? descriptionSelector.get(0).attr("content")
+            : htmlDocument.title();
 
         System.out.println("Link: " + url);
         System.out.println(htmlDocument.title());
-        System.out.println("Meta description 1 : " + description);
+        System.out.println("Page description: " + description);
         boolean alreadyMatched = false;
 
         for (Element link : htmlDocument.getAllElements()) {
@@ -108,5 +112,15 @@ public class ScrapeService {
             exception.printStackTrace();
             return null;
         }
+    }
+
+    private boolean checkIfDocumentIsLoginPage(Document document) {
+        String documentTitle = document.title().toLowerCase();
+        return documentTitle.contains("login")
+            || documentTitle.contains("log in")
+            || documentTitle.contains("sign in")
+            || documentTitle.contains("create account")
+            || documentTitle.contains("make account")
+            || documentTitle.contains("sign up");
     }
 }

@@ -2,4 +2,5 @@ search:
   engine:
     max-depth: 5
     max-number-of-pages: 100
-    url: https://stackoverflow.com/
+    url-stack-overflow: https://stackoverflow.com/
+    url-wikipedia: https://wikipedia.org/
